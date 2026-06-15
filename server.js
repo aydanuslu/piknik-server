@@ -4,7 +4,7 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT;
-const DATA_FILE = path.join(__dirname, 'data.json');
+const DATA_FILE = '/app/data/data.json';
 
 // ── Middleware ──────────────────────────────────────────────
 app.use(express.json());
