@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kura Admin — Bahar Şenliği</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#e8f5e9,#fce4ec);min-height:100vh;padding:30px 16px}
+.wrap{max-width:560px;margin:0 auto}
+.hero{text-align:center;margin-bottom:28px}
+.hero h1{font-size:24px;font-weight:800;color:#2d6a4f;margin-bottom:6px}
+.hero p{font-size:14px;color:#6b8c72}
+.card{background:white;border-radius:18px;box-shadow:0 4px 24px rgba(0,0,0,.10);overflow:hidden;margin-bottom:20px}
+.card-header{background:linear-gradient(135deg,#2d6a4f,#52b788);color:white;padding:20px 24px}
+.card-header h2{font-size:17px;font-weight:700}
+.card-body{padding:24px}
+.status-box{background:#f5f5f5;border-radius:12px;padding:20px;margin-bottom:20px;text-align:center;color:#6b8c72;font-size:14px}
+.drum{font-size:48px;text-align:center;animation:spin .3s linear infinite;display:none;margin:12px 0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ticker{font-size:16px;font-weight:700;color:#1a237e;min-height:24px;margin:8px 0;display:none;text-align:center}
+.winner-item{display:flex;align-items:center;gap:12px;background:white;border:2px solid #d8f3dc;border-radius:12px;padding:14px;margin-bottom:10px}
+.w-num{width:36px;height:36px;border-radius:50%;background:#2d6a4f;color:white;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.w-name{font-size:15px;font-weight:700;color:#1a2e1a}
+.w-no{font-size:12px;color:#6b8c72;margin-top:2px}
+.btn{width:100%;padding:15px;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;margin-bottom:10px}
+.btn-cek{background:linear-gradient(135deg,#2d6a4f,#52b788);color:white;box-shadow:0 4px 16px rgba(45,106,79,.35)}
+.btn-cek:hover{transform:translateY(-2px)}
+.btn-cek:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.btn-sifirla{background:#ffebee;color:#c62828;border:2px solid #ef9a9a;display:none}
+.info{background:#e8eaf6;border-radius:10px;padding:14px;font-size:13px;color:#1a237e;margin-top:16px;text-align:center}
+.info a{color:#1565c0;font-weight:700}
+.mevcut{background:#e8f5e9;border:1.5px solid #a5d6a7;border-radius:10px;padding:14px;margin-bottom:16px;display:none}
+.mevcut-title{font-weight:700;color:#2e7d32;margin-bottom:10px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div style="font-size:48px;margin-bottom:12px">🌸</div>
+    <h1>Bahar Şenliği Kura Admin</h1>
+    <p>Beytepe Ortaokulu 5-D • Sadece yönetici kullanır</p>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h2>🎰 Kura Çekimi — 2 Öğrenci Seçilecek</h2></div>
+    <div class="card-body">
+
+      <div id="mevcutKura" class="mevcut">
+        <div class="mevcut-title">✅ Mevcut Kura Sonucu</div>
+        <div id="mevcutList"></div>
+      </div>
+
+      <div class="status-box" id="statusBox">
+        🎲 Kura çekmek için aşağıdaki butona basın
+      </div>
+
+      <div id="drum" class="drum">🎲</div>
+      <div id="ticker" class="ticker"></div>
+      <div id="winners"></div>
+
+      <button class="btn btn-cek" id="btnCek" onclick="kuraCek()">🎰 Kura Çek</button>
+      <button class="btn btn-sifirla" id="btnSifirla" onclick="kuraSifirla()">🗑️ Kura Sonucunu Sıfırla</button>
+
+      <div class="info">
+        Kura çekildikten sonra veliler şu linkten sonucu görebilir:<br>
+        <a href="/kura.html" target="_blank">beytepepiknik.up.railway.app/kura.html</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ogrenciler=[
+  {ad:"Demir Altun",no:113},{ad:"Muhammed Ziya Alpman",no:118},
+  {ad:"Eymen Bahar",no:122},{ad:"Nur Alanur Bayraktutan",no:143},
+  {ad:"Ata Akgül",no:148},{ad:"Mehmet Çınar Birbilen",no:152},
+  {ad:"Baha Özsümbül",no:161},{ad:"Deniz Gökmen",no:192},
+  {ad:"Erva Ada Başak",no:229},{ad:"Cansu Meral",no:243},
+  {ad:"Defne Kula",no:272},{ad:"Fatih Hamza Dikmen",no:325},
+  {ad:"Yiğit Arslan Koçakoğlu",no:399},{ad:"Aslı Köroğlu",no:408},
+  {ad:"Burçak Günaydın",no:475},{ad:"Ufuk Çelik Tunç",no:502},
+  {ad:"Yusuf Erol Doğrusoy",no:511},{ad:"Metehan Emir Kumcu",no:526},
+  {ad:"M. Ali Karaçöl",no:536},{ad:"Yiğit Barsbay",no:559},
+  {ad:"M. Taha Büyükköprü",no:563},{ad:"Zafer Yılmaz",no:671},
+  {ad:"Derin Çoruh",no:722},{ad:"Duru Yıldırım",no:865},
+  {ad:"Defne Rena Öztürk",no:878},{ad:"Elif Demirkısan",no:917},
+  {ad:"Elif Aybige Yılmaz",no:931},{ad:"Ece Esen",no:942},
+  {ad:"Lara Öztürk",no:951},{ad:"Mira Öztürk",no:952},
+  {ad:"Asrın Coşkun",no:973},{ad:"Erva Yerlikaya",no:977},
+  {ad:"Filiz Beyza Cebe",no:980},{ad:"Karen Çırak",no:986},
+  {ad:"Öykü Çelik",no:992},{ad:"Hira Nur Deniz",no:993},
+  {ad:"Ela Elverir",no:1001},{ad:"M. Zahid Özcan",no:1009}
+];
+
+async function yukle(){
+  try{
+    const r=await fetch('/api/kura');
+    if(r.status===404){ document.getElementById('mevcutKura').style.display='none'; return; }
+    const k=await r.json();
+    document.getElementById('mevcutKura').style.display='block';
+    document.getElementById('statusBox').style.display='none';
+    document.getElementById('mevcutList').innerHTML=k.secilen.map((p,i)=>`
+      <div class="winner-item">
+        <div class="w-num">${i+1}</div>
+        <div><div class="w-name">${p.ad}</div><div class="w-no">No: ${p.no} • ${k.tarih}</div></div>
+        <span style="margin-left:auto;background:#d8f3dc;color:#2d6a4f;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;">🎪 Stant</span>
+      </div>`).join('');
+    document.getElementById('btnCek').style.display='none';
+    document.getElementById('btnSifirla').style.display='block';
+  }catch(e){}
+}
+
+async function kuraCek(){
+  const btn=document.getElementById('btnCek');
+  const drum=document.getElementById('drum');
+  const ticker=document.getElementById('ticker');
+  const box=document.getElementById('statusBox');
+  btn.disabled=true;
+  box.style.display='none';
+  drum.style.display='block';
+  ticker.style.display='block';
+  const pool=[...ogrenciler].sort(()=>Math.random()-.5);
+  const picked=pool.slice(0,2);
+  const iv=setInterval(()=>{
+    ticker.textContent=ogrenciler[Math.floor(Math.random()*ogrenciler.length)].ad;
+  },80);
+  setTimeout(async()=>{
+    clearInterval(iv);
+    drum.style.display='none';
+    ticker.style.display='none';
+    await fetch('/api/kura',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({secilen:picked})});
+    document.getElementById('winners').innerHTML=picked.map((p,i)=>`
+      <div class="winner-item">
+        <div class="w-num">${i+1}</div>
+        <div><div class="w-name">${p.ad}</div><div class="w-no">No: ${p.no}</div></div>
+        <span style="margin-left:auto;background:#d8f3dc;color:#2d6a4f;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;">🎪 Stant</span>
+      </div>`).join('');
+    document.getElementById('btnSifirla').style.display='block';
+    yukle();
+  },3000);
+}
+
+async function kuraSifirla(){
+  if(!confirm('Kura sonucu silinecek, emin misiniz?'))return;
+  await fetch('/api/kura',{method:'DELETE'});
+  document.getElementById('mevcutKura').style.display='none';
+  document.getElementById('winners').innerHTML='';
+  document.getElementById('btnCek').disabled=false;
+  document.getElementById('btnCek').style.display='block';
+  document.getElementById('btnSifirla').style.display='none';
+  document.getElementById('statusBox').style.display='block';
+}
+
+yukle();
+</script>
+</body>
+</html>
