@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bahar Şenliği Kura Sonucu — 5-D</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green: #2d6a4f; --green-lt: #52b788; --green-bg: #d8f3dc;
+      --pink: #e91e8c; --pink-lt: #fce4ec;
+      --cream: #fefdf8; --card: #fff; --text: #1a2e1a; --muted: #6b8c72;
+      --shadow: 0 4px 24px rgba(45,106,79,.13); --radius: 18px;
+    }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    @keyframes pop { 0%{transform:scale(0.5);opacity:0} 70%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
+    @keyframes confetti-fall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(700px) rotate(720deg);opacity:0} }
+
+    body { background: linear-gradient(135deg,#e8f5e9 0%,#fce4ec 50%,#e3f2fd 100%); min-height:100vh; font-family:'Segoe UI',system-ui,sans-serif; color:var(--text); padding:0 0 60px; }
+
+    .wrap { max-width:560px; margin:0 auto; padding:32px 16px; }
+
+    .hero { text-align:center; margin-bottom:28px; }
+    .deco { font-size:52px; display:block; margin-bottom:12px; animation:float 3s ease-in-out infinite; }
+    .school-badge { display:inline-flex; align-items:center; gap:8px; background:white; border:2px solid #b2dfdb; border-radius:30px; padding:6px 18px; font-size:13px; font-weight:700; color:var(--green); margin-bottom:14px; }
+    .hero h1 { font-size:26px; font-weight:800; background:linear-gradient(135deg,#2d6a4f,#e91e8c); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:6px; }
+    .hero p { font-size:14px; color:var(--muted); }
+
+    /* LOADING */
+    #loading { text-align:center; padding:60px 20px; }
+    .spinner { width:48px; height:48px; border:4px solid #e0e0e0; border-top-color:var(--green); border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 16px; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+
+    /* NO RESULT */
+    #noResult { text-align:center; padding:40px 20px; display:none; }
+    .no-icon { font-size:56px; margin-bottom:16px; }
+    .no-title { font-size:20px; font-weight:700; color:var(--muted); margin-bottom:8px; }
+    .no-sub { font-size:14px; color:var(--muted); }
+
+    /* RESULT CARD */
+    #resultCard { display:none; animation:pop .5s cubic-bezier(.34,1.56,.64,1); }
+
+    .result-header { background:linear-gradient(135deg,#2d6a4f,#e91e8c); border-radius:var(--radius) var(--radius) 0 0; padding:24px; text-align:center; color:white; }
+    .result-header .r-icon { font-size:40px; margin-bottom:8px; }
+    .result-header h2 { font-size:20px; font-weight:800; margin-bottom:4px; }
+    .result-header p { font-size:13px; opacity:.85; }
+
+    .result-body { background:white; border-radius:0 0 var(--radius) var(--radius); box-shadow:var(--shadow); padding:24px; }
+
+    .winner-item { display:flex; align-items:center; gap:14px; padding:16px; background:var(--cream); border-radius:14px; margin-bottom:12px; border:2px solid var(--green-bg); }
+    .winner-item:last-child { margin-bottom:0; }
+
+    .w-num { width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg,#2d6a4f,#52b788); color:white; font-size:18px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .w-info { flex:1; }
+    .w-name { font-size:16px; font-weight:700; color:var(--text); margin-bottom:3px; }
+    .w-sub { font-size:12px; color:var(--muted); }
+    .w-badge { background:var(--green-bg); color:var(--green); font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; white-space:nowrap; }
+
+    .kura-meta { margin-top:20px; padding:14px; background:#f5f5f5; border-radius:10px; text-align:center; font-size:12px; color:var(--muted); }
+
+    .congrats { text-align:center; margin-top:20px; padding:16px; background:var(--green-bg); border-radius:12px; font-size:14px; font-weight:600; color:var(--green); }
+
+    .btn-share { width:100%; margin-top:16px; padding:14px; border:none; border-radius:12px; background:linear-gradient(135deg,#2d6a4f,#52b788); color:white; font-size:15px; font-weight:700; cursor:pointer; transition:all .15s; }
+    .btn-share:hover { transform:translateY(-2px); }
+
+    .confetti-piece { position:fixed; border-radius:2px; animation:confetti-fall linear forwards; pointer-events:none; z-index:999; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <span class="deco">🌸</span>
+    <div class="school-badge">🏫 Beytepe Ortaokulu</div>
+    <h1>Bahar Şenliği Kura Sonucu</h1>
+    <p>5-D Sınıfı • Stant Görevlileri • 18 Haziran 2026</p>
+  </div>
+
+  <div id="loading">
+    <div class="spinner"></div>
+    <p style="color:var(--muted);font-size:14px;">Kura sonucu yükleniyor...</p>
+  </div>
+
+  <div id="noResult">
+    <div class="no-icon">⏳</div>
+    <div class="no-title">Kura Henüz Çekilmedi</div>
+    <div class="no-sub">Sınıf öğretmeniniz kura çektiğinde<br>sonuç burada görünecek.</div>
+  </div>
+
+  <div id="resultCard">
+    <div class="result-header">
+      <div class="r-icon">🎊</div>
+      <h2>Kura Sonuçları Açıklandı!</h2>
+      <p>Bahar Şenliği'nde stant görevine seçilen öğrenciler</p>
+    </div>
+    <div class="result-body">
+      <div id="winnersList"></div>
+      <div class="congrats">🎉 Seçilen öğrencileri tebrik ederiz!</div>
+      <div class="kura-meta" id="kuraMeta"></div>
+      <button class="btn-share" onclick="share()">📤 Sonucu Paylaş</button>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadKura() {
+  try {
+    const r = await fetch('/api/kura');
+    if (r.status === 404) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('noResult').style.display = 'block';
+      return;
+    }
+    const kura = await r.json();
+    showResult(kura);
+  } catch {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('noResult').style.display = 'block';
+  }
+}
+
+function showResult(kura) {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('resultCard').style.display = 'block';
+
+  document.getElementById('winnersList').innerHTML = kura.secilen.map((p, i) => `
+    <div class="winner-item">
+      <div class="w-num">${i + 1}</div>
+      <div class="w-info">
+        <div class="w-name">${p.ad}</div>
+        <div class="w-sub">No: ${p.no}</div>
+      </div>
+      <span class="w-badge">🎪 Stant Görevlisi</span>
+    </div>
+  `).join('');
+
+  document.getElementById('kuraMeta').textContent = `Kura çekilme tarihi: ${kura.tarih}`;
+  confetti();
+}
+
+function share() {
+  fetch('/api/kura').then(r => r.json()).then(kura => {
+    const text = `🌸 Beytepe Ortaokulu Bahar Şenliği\n5-D Sınıfı Stant Görevlileri\n\n` +
+      kura.secilen.map((p, i) => `${i+1}. ${p.ad} (No: ${p.no})`).join('\n') +
+      `\n\nKura tarihi: ${kura.tarih}`;
+    if (navigator.share) {
+      navigator.share({ title: 'Bahar Şenliği Kura Sonucu', text });
+    } else {
+      navigator.clipboard.writeText(text).then(() => alert('Kopyalandı! WhatsApp\'a yapıştırabilirsiniz.'));
+    }
+  });
+}
+
+function confetti() {
+  const colors = ['#2d6a4f','#e91e8c','#f9a825','#1565c0','#52b788'];
+  for (let i = 0; i < 60; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.cssText = `left:${Math.random()*100}vw;top:-20px;background:${colors[Math.floor(Math.random()*colors.length)]};width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${1.5+Math.random()*2}s;animation-delay:${Math.random()*.8}s;`;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 4000);
+  }
+}
+
+loadKura();
+// Her 10 saniyede kontrol et (kura çekilince otomatik göster)
+setInterval(loadKura, 10000);
+</script>
+</body>
+</html>

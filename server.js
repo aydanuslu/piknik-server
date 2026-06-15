@@ -3,8 +3,8 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT;
-const DATA_FILE = '/app/data/data.json';
+const PORT = process.env.PORT || 3000;
+const DATA_FILE = path.join(__dirname, 'data.json');
 
 // ── Middleware ──────────────────────────────────────────────
 app.use(express.json());
@@ -62,6 +62,46 @@ app.delete('/api/kayitlar/:key', (req, res) => {
 // Tüm verileri sil (admin)
 app.delete('/api/kayitlar', (req, res) => {
   writeData({});
+  res.json({ ok: true });
+});
+
+// ── Kura API ─────────────────────────────────────────────────
+const KURA_FILE = '/app/data/kura.json';
+
+function readKura() {
+  try {
+    if (!fs.existsSync(KURA_FILE)) return null;
+    return JSON.parse(fs.readFileSync(KURA_FILE, 'utf8'));
+  } catch { return null; }
+}
+
+function writeKura(data) {
+  fs.writeFileSync(KURA_FILE, JSON.stringify(data, null, 2), 'utf8');
+}
+
+// Kura sonucunu getir (herkese açık)
+app.get('/api/kura', (req, res) => {
+  const kura = readKura();
+  if (!kura) return res.status(404).json({ error: 'Henüz kura çekilmedi' });
+  res.json(kura);
+});
+
+// Kura çek ve kaydet (admin)
+app.post('/api/kura', (req, res) => {
+  const { secilen } = req.body;
+  if (!secilen || !Array.isArray(secilen)) return res.status(400).json({ error: 'Geçersiz veri' });
+  const kura = {
+    secilen,
+    tarih: new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' }),
+    ceken: 'Admin'
+  };
+  writeKura(kura);
+  res.json({ ok: true, kura });
+});
+
+// Kurayı sıfırla (admin)
+app.delete('/api/kura', (req, res) => {
+  try { fs.unlinkSync(KURA_FILE); } catch {}
   res.json({ ok: true });
 });
 

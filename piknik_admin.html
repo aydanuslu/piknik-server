@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — 5-D Piknik</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy:#1a237e; --blue:#1565c0; --blue-lt:#42a5f5;
+      --bg:#f0f4f8; --card:#fff; --border:#dce3ef;
+      --text:#1a2333; --muted:#6b7a99;
+      --green:#2e7d32; --green-bg:#e8f5e9;
+      --red:#c62828; --red-bg:#ffebee;
+      --amber:#f57f17; --amber-bg:#fff8e1;
+      --shadow:0 2px 14px rgba(26,35,126,.09);
+    }
+    body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; min-height:100vh; }
+
+    /* TOPBAR */
+    .topbar { background:linear-gradient(90deg,#0d1b6e,#1a237e 50%,#283593); color:white; padding:0 28px; height:58px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; box-shadow:0 2px 12px rgba(0,0,0,.25); }
+    .topbar-left { display:flex; align-items:center; gap:12px; }
+    .topbar-logo { font-size:22px; }
+    .topbar-title { font-size:16px; font-weight:700; letter-spacing:-.2px; }
+    .topbar-sub { font-size:12px; opacity:.65; }
+    .topbar-right { display:flex; gap:10px; }
+    .tb-btn { padding:7px 16px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; border:1px solid rgba(255,255,255,.25); background:rgba(255,255,255,.12); color:white; transition:background .15s; display:flex; align-items:center; gap:6px; }
+    .tb-btn:hover { background:rgba(255,255,255,.22); }
+    .tb-btn.danger { border-color:#ef9a9a; background:rgba(198,40,40,.25); }
+    .tb-btn.danger:hover { background:rgba(198,40,40,.45); }
+
+    /* LAYOUT */
+    .layout { display:grid; grid-template-columns:250px 1fr; min-height:calc(100vh - 58px); }
+
+    /* SIDEBAR */
+    .sidebar { background:var(--card); border-right:1px solid var(--border); padding:20px 0; }
+    .sidebar-section { padding:6px 18px 6px; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.8px; margin-top:10px; }
+    .nav-item { display:flex; align-items:center; gap:10px; padding:10px 20px; font-size:14px; font-weight:500; color:var(--muted); cursor:pointer; transition:all .15s; border-left:3px solid transparent; }
+    .nav-item:hover { background:var(--bg); color:var(--navy); }
+    .nav-item.active { background:#e8eaf6; color:var(--navy); font-weight:700; border-left-color:var(--navy); }
+    .nav-item .icon { font-size:17px; width:22px; text-align:center; }
+    .nav-badge { margin-left:auto; background:var(--blue); color:white; border-radius:12px; padding:2px 8px; font-size:11px; font-weight:700; }
+    .nav-badge.red { background:var(--red); }
+    .nav-badge.green { background:var(--green); }
+
+    /* MAIN */
+    .main { padding:28px; overflow-x:auto; }
+    .view { display:none; }
+    .view.active { display:block; }
+
+    /* KPI */
+    .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+    .kpi-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px; box-shadow:var(--shadow); position:relative; overflow:hidden; }
+    .kpi-card::before { content:''; position:absolute; top:0;left:0;right:0; height:3px; }
+    .kpi-card.c1::before{background:var(--blue);}
+    .kpi-card.c2::before{background:var(--green);}
+    .kpi-card.c3::before{background:#7b1fa2;}
+    .kpi-card.c4::before{background:var(--amber);}
+    .kpi-card.c5::before{background:var(--red);}
+    .kpi-icon { font-size:24px; margin-bottom:10px; }
+    .kpi-val { font-size:32px; font-weight:800; color:var(--navy); line-height:1; margin-bottom:4px; }
+    .kpi-label { font-size:13px; color:var(--muted); font-weight:500; }
+    .kpi-sub { font-size:11px; color:var(--blue-lt); margin-top:4px; font-weight:600; }
+
+    /* TIME BARS */
+    .panel { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px; box-shadow:var(--shadow); margin-bottom:20px; }
+    .panel-title { font-size:14px; font-weight:700; color:var(--navy); margin-bottom:16px; }
+    .bar-row { display:grid; grid-template-columns:90px 1fr 40px; align-items:center; gap:12px; margin-bottom:10px; }
+    .bar-label { font-size:13px; font-weight:600; color:var(--text); }
+    .bar-track { height:12px; background:#edf2f7; border-radius:6px; overflow:hidden; }
+    .bar-fill { height:100%; border-radius:6px; transition:width .6s ease; }
+    .bar-fill.sabah { background:linear-gradient(90deg,#f9a825,#fdd835); }
+    .bar-fill.ogle  { background:linear-gradient(90deg,#2e7d32,#4caf50); }
+    .bar-fill.aksam { background:linear-gradient(90deg,#6a1b9a,#9c27b0); }
+    .bar-count { font-size:13px; font-weight:700; color:var(--muted); text-align:right; }
+
+    /* TABLE */
+    .table-card { background:var(--card); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow); overflow:hidden; }
+    .table-toolbar { padding:14px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); flex-wrap:wrap; gap:10px; }
+    .toolbar-left { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    #searchFilter { padding:8px 14px; border:1.5px solid var(--border); border-radius:9px; font-size:13px; outline:none; width:200px; transition:border-color .2s; }
+    #searchFilter:focus { border-color:var(--blue-lt); }
+    .f-btn { padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; border:1.5px solid var(--border); background:var(--bg); color:var(--muted); transition:all .15s; }
+    .f-btn:hover { border-color:var(--blue-lt); color:var(--blue); }
+    .f-btn.active { border-color:var(--blue); background:#e8eaf6; color:var(--navy); }
+
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    thead { background:var(--bg); }
+    thead th { padding:11px 16px; text-align:left; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; white-space:nowrap; }
+    tbody tr { border-top:1px solid var(--border); transition:background .1s; }
+    tbody tr:hover { background:#f5f8ff; }
+    tbody td { padding:12px 16px; vertical-align:middle; }
+
+    .family-cell { font-weight:700; color:var(--navy); }
+    .student-info { font-size:11px; font-weight:400; color:var(--muted); margin-top:2px; }
+    .no-badge { display:inline-block; background:#e8eaf6; color:var(--navy); border-radius:5px; padding:1px 6px; font-size:10px; font-weight:700; margin-right:4px; }
+
+    .count-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:700; }
+    .count-badge.yet { background:#e3f2fd; color:#1565c0; }
+    .count-badge.coc { background:#fce4ec; color:#c2185b; }
+
+    .time-tag { display:inline-block; padding:3px 9px; border-radius:6px; font-size:11px; font-weight:700; margin:2px; }
+    .time-tag.sabah { background:#fff8e1; color:#f57f17; }
+    .time-tag.ogle  { background:var(--green-bg); color:var(--green); }
+    .time-tag.aksam { background:#f3e5f5; color:#7b1fa2; }
+
+    .not-cell { color:var(--muted); font-size:12px; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .date-cell { color:var(--muted); font-size:11px; white-space:nowrap; }
+
+    .del-btn { padding:5px 10px; background:var(--red-bg); color:var(--red); border:1px solid #ef9a9a; border-radius:7px; font-size:12px; font-weight:600; cursor:pointer; transition:background .1s; }
+    .del-btn:hover { background:#ffcdd2; }
+
+    .empty-state { text-align:center; padding:48px; color:var(--muted); font-size:14px; }
+    .empty-state .e-icon { font-size:40px; margin-bottom:12px; }
+
+    /* PENDING */
+    .pending-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:10px; }
+    .pending-chip { background:var(--card); border:1.5px solid var(--border); border-radius:10px; padding:12px 14px; }
+    .pending-chip .p-name { font-size:13px; font-weight:700; color:var(--navy); }
+    .pending-chip .p-student { font-size:11px; color:var(--muted); margin-top:3px; }
+    .pending-chip .p-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#cfd8dc; margin-right:6px; }
+
+    @media(max-width:900px){ .layout{grid-template-columns:1fr;} .sidebar{display:none;} .kpi-grid{grid-template-columns:repeat(2,1fr);} }
+    @media print { .topbar,.sidebar{display:none;} .main{padding:0;} .table-toolbar{display:none;} }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <span class="topbar-logo">🏫</span>
+    <div>
+      <div class="topbar-title">Piknik Admin Paneli</div>
+      <div class="topbar-sub">Beytepe Ortaokulu 5-D • 20 Haziran 2025 • 38 Öğrenci</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <button class="tb-btn" onclick="exportCSV()">📊 CSV İndir</button>
+    <button class="tb-btn" onclick="window.print()">🖨️ Yazdır</button>
+    <button class="tb-btn danger" onclick="clearAll()">🗑️ Tüm Verileri Sil</button>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="sidebar-section">Görünüm</div>
+    <div class="nav-item active" id="nav-dashboard" onclick="switchView('dashboard',this)">
+      <span class="icon">📊</span> Özet Dashboard
+    </div>
+    <div class="nav-item" id="nav-table" onclick="switchView('table',this)">
+      <span class="icon">📋</span> Tüm Kayıtlar
+      <span class="nav-badge green" id="sideCount">0</span>
+    </div>
+    <div class="nav-item" id="nav-pending" onclick="switchView('pending',this)">
+      <span class="icon">⏳</span> Bekleyenler
+      <span class="nav-badge red" id="sidePending">0</span>
+    </div>
+
+    <div class="sidebar-section">Zaman Filtresi</div>
+    <div class="nav-item" onclick="filterByTime('sabah',this)"><span class="icon">☀️</span> Sabah</div>
+    <div class="nav-item" onclick="filterByTime('ogle',this)"><span class="icon">🌤️</span> Öğle</div>
+    <div class="nav-item" onclick="filterByTime('aksam',this)"><span class="icon">🌇</span> Akşam</div>
+    <div class="nav-item" onclick="filterByTime(null,this)"><span class="icon">👁️</span> Tümü Göster</div>
+
+    <div class="sidebar-section">İşlemler</div>
+    <div class="nav-item" onclick="render()"><span class="icon">🔄</span> Yenile</div>
+  </div>
+
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div id="view-dashboard" class="view active">
+      <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);">
+        <div class="kpi-card c1"><div class="kpi-icon">🏠</div><div class="kpi-val" id="kpiAile">0</div><div class="kpi-label">Katılan Aile</div><div class="kpi-sub" id="kpiAilePct">/ 38</div></div>
+        <div class="kpi-card c2"><div class="kpi-icon">👨‍👩‍👧</div><div class="kpi-val" id="kpiYet">0</div><div class="kpi-label">Yetişkin</div></div>
+        <div class="kpi-card c3"><div class="kpi-icon">👧</div><div class="kpi-val" id="kpiCoc">0</div><div class="kpi-label">Çocuk</div></div>
+        <div class="kpi-card c4"><div class="kpi-icon">👥</div><div class="kpi-val" id="kpiTop">0</div><div class="kpi-label">Toplam Kişi</div></div>
+        <div class="kpi-card c5"><div class="kpi-icon">⏳</div><div class="kpi-val" id="kpiBekleyen">38</div><div class="kpi-label">Bekleyen</div></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">⏰ Zaman Dilimi Dağılımı</div>
+        <div class="bar-row">
+          <span class="bar-label">☀️ Sabah</span>
+          <div class="bar-track"><div class="bar-fill sabah" id="barSabah" style="width:0%"></div></div>
+          <span class="bar-count" id="cntSabah">0</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">🌤️ Öğle</span>
+          <div class="bar-track"><div class="bar-fill ogle" id="barOgle" style="width:0%"></div></div>
+          <span class="bar-count" id="cntOgle">0</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">🌇 Akşam</span>
+          <div class="bar-track"><div class="bar-fill aksam" id="barAksam" style="width:0%"></div></div>
+          <span class="bar-count" id="cntAksam">0</span>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-toolbar"><div class="panel-title" style="margin:0;">📋 Son Kayıtlar</div></div>
+        <table>
+          <thead><tr><th>Öğrenci</th><th>Aile Soyadı</th><th>Yetişkin</th><th>Çocuk</th><th>Zamanlar</th><th>Kayıt</th></tr></thead>
+          <tbody id="dashTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div id="view-table" class="view">
+      <div class="table-card">
+        <div class="table-toolbar">
+          <div class="toolbar-left">
+            <input type="text" id="searchFilter" placeholder="🔍 Aile veya öğrenci ara..." oninput="renderTable()">
+            <button class="f-btn active" onclick="setFilter('all',this)">Tümü</button>
+            <button class="f-btn" onclick="setFilter('sabah',this)">☀️ Sabah</button>
+            <button class="f-btn" onclick="setFilter('ogle',this)">🌤️ Öğle</button>
+            <button class="f-btn" onclick="setFilter('aksam',this)">🌇 Akşam</button>
+          </div>
+          <span style="font-size:12px;color:var(--muted);" id="tableCount"></span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Aile Soyadı / Öğrenci</th>
+              <th>Yetişkin</th><th>Çocuk</th><th>Toplam</th>
+              <th>Zamanlar</th><th>Not</th><th>Kayıt Tarihi</th><th>İşlem</th>
+            </tr>
+          </thead>
+          <tbody id="mainTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PENDING -->
+    <div id="view-pending" class="view">
+      <div class="panel">
+        <div class="panel-title">⏳ Henüz Yanıt Vermemiş Aileler</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:18px;">Aşağıdaki öğrencilerin ailesinden henüz katılım bilgisi alınmadı.</p>
+        <div class="pending-grid" id="pendingList"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'piknik_5d_v1';
+
+const ogrenciler = [
+  { key:"Altun",       label:"Altun",       student:"Demir Altun",            no:113 },
+  { key:"Alpman",      label:"Alpman",      student:"Muhammed Ziya Alpman",   no:118 },
+  { key:"Bahar",       label:"Bahar",       student:"Eymen Bahar",            no:122 },
+  { key:"Bayraktutan", label:"Bayraktutan", student:"Nur Alanur Bayraktutan", no:143 },
+  { key:"Akgül",       label:"Akgül",       student:"Ata Akgül",              no:148 },
+  { key:"Birbilen",    label:"Birbilen",    student:"Mehmet Çınar Birbilen",  no:152 },
+  { key:"Özsümbül",    label:"Özsümbül",    student:"Baha Özsümbül",          no:161 },
+  { key:"Gökmen",      label:"Gökmen",      student:"Deniz Gökmen",           no:192 },
+  { key:"Başak",       label:"Başak",       student:"Erva Ada Başak",         no:229 },
+  { key:"Meral",       label:"Meral",       student:"Cansu Meral",            no:243 },
+  { key:"Kula",        label:"Kula",        student:"Defne Kula",             no:272 },
+  { key:"Dikmen",      label:"Dikmen",      student:"Fatih Hamza Dikmen",     no:325 },
+  { key:"Koçakoğlu",  label:"Koçakoğlu",   student:"Yiğit Arslan Koçakoğlu",no:399 },
+  { key:"Köroğlu",    label:"Köroğlu",      student:"Aslı Köroğlu",           no:408 },
+  { key:"Günaydın",   label:"Günaydın",     student:"Burçak Günaydın",        no:475 },
+  { key:"Tunç",        label:"Tunç",        student:"Ufuk Çelik Tunç",        no:502 },
+  { key:"Doğrusoy",   label:"Doğrusoy",     student:"Yusuf Erol Doğrusoy",    no:511 },
+  { key:"Kumcu",       label:"Kumcu",       student:"Metehan Emir Kumcu",     no:526 },
+  { key:"Karaçöl",    label:"Karaçöl",      student:"M. Ali Karaçöl",         no:536 },
+  { key:"Barsbay",     label:"Barsbay",     student:"Yiğit Barsbay",          no:559 },
+  { key:"Büyükköprü", label:"Büyükköprü",  student:"M. Taha Büyükköprü",     no:563 },
+  { key:"Yılmaz_671", label:"Yılmaz",      student:"Zafer Yılmaz",            no:671 },
+  { key:"Çoruh",       label:"Çoruh",       student:"Derin Çoruh",            no:722 },
+  { key:"Yıldırım",   label:"Yıldırım",     student:"Duru Yıldırım",          no:865 },
+  { key:"Öztürk_878", label:"Öztürk",      student:"Defne Rena Öztürk",      no:878 },
+  { key:"Demirkısan", label:"Demirkısan",   student:"Elif Demirkısan",        no:917 },
+  { key:"Yılmaz_931", label:"Yılmaz",      student:"Elif Aybige Yılmaz",     no:931 },
+  { key:"Esen",        label:"Esen",        student:"Ece Esen",               no:942 },
+  { key:"Öztürk_951", label:"Öztürk",      student:"Lara Öztürk",            no:951 },
+  { key:"Öztürk_952", label:"Öztürk",      student:"Mira Öztürk",            no:952 },
+  { key:"Coşkun",      label:"Coşkun",      student:"Asrın Coşkun",           no:973 },
+  { key:"Yerlikaya",  label:"Yerlikaya",    student:"Erva Yerlikaya",         no:977 },
+  { key:"Cebe",        label:"Cebe",        student:"Filiz Beyza Cebe",       no:980 },
+  { key:"Çırak",       label:"Çırak",       student:"Karen Çırak",            no:986 },
+  { key:"Çelik",       label:"Çelik",       student:"Öykü Çelik",             no:992 },
+  { key:"Deniz",       label:"Deniz",       student:"Hira Nur Deniz",         no:993 },
+  { key:"Elverir",    label:"Elverir",      student:"Ela Elverir",            no:1001 },
+  { key:"Özcan",       label:"Özcan",       student:"M. Zahid Özcan",         no:1009 },
+];
+
+let currentFilter = 'all';
+
+function getData() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}'); } catch { return {}; } }
+
+function timeTags(arr) {
+  const lbl = {sabah:'☀️ Sabah',ogle:'🌤️ Öğle',aksam:'🌇 Akşam'};
+  return (arr||[]).map(z=>`<span class="time-tag ${z}">${lbl[z]}</span>`).join('');
+}
+
+function render() {
+  const data = getData();
+  const entries = Object.entries(data);
+  const total = entries.length;
+  let yet=0,coc=0,sb=0,og=0,ak=0;
+  entries.forEach(([,v])=>{
+    yet+=v.yetiskin||0; coc+=v.cocuk||0;
+    if(v.zamanlar?.includes('sabah')) sb++;
+    if(v.zamanlar?.includes('ogle'))  og++;
+    if(v.zamanlar?.includes('aksam')) ak++;
+  });
+
+  document.getElementById('kpiAile').textContent    = total;
+  document.getElementById('kpiAilePct').textContent = `/ 38 öğrenci (${Math.round(total/38*100)}%)`;
+  document.getElementById('kpiYet').textContent     = yet;
+  document.getElementById('kpiCoc').textContent     = coc;
+  document.getElementById('kpiTop').textContent     = yet+coc;
+  document.getElementById('kpiBekleyen').textContent= 38-total;
+  document.getElementById('sideCount').textContent  = total;
+  document.getElementById('sidePending').textContent= 38-total;
+
+  const mx = Math.max(sb,og,ak,1);
+  document.getElementById('barSabah').style.width = (sb/mx*100)+'%';
+  document.getElementById('barOgle').style.width  = (og/mx*100)+'%';
+  document.getElementById('barAksam').style.width = (ak/mx*100)+'%';
+  document.getElementById('cntSabah').textContent = sb;
+  document.getElementById('cntOgle').textContent  = og;
+  document.getElementById('cntAksam').textContent = ak;
+
+  // Dashboard table (last 10, newest first)
+  const sorted = [...entries].sort((a,b)=>(b[1].tarih||'').localeCompare(a[1].tarih||''));
+  const dt = document.getElementById('dashTable');
+  if (!sorted.length) {
+    dt.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted);">
+      <div style="font-size:32px;margin-bottom:8px;">📭</div>Henüz kayıt yok.</td></tr>`;
+  } else {
+    dt.innerHTML = sorted.slice(0,10).map(([key,v]) => `
+      <tr>
+        <td><div class="student-info"><span class="no-badge">No:${v.no}</span>${v.student||key}</div></td>
+        <td class="family-cell">${v.label||key} Ailesi</td>
+        <td><span class="count-badge yet">👨‍👩‍👧 ${v.yetiskin}</span></td>
+        <td><span class="count-badge coc">👧 ${v.cocuk}</span></td>
+        <td>${timeTags(v.zamanlar)}</td>
+        <td class="date-cell">${v.tarih||'—'}</td>
+      </tr>`).join('');
+  }
+
+  renderTable();
+  renderPending();
+}
+
+function renderTable() {
+  const data = getData();
+  const q = (document.getElementById('searchFilter')?.value||'').toLowerCase();
+  let entries = Object.entries(data);
+  if (q) entries = entries.filter(([key,v]) =>
+    (v.label||key).toLowerCase().includes(q) ||
+    (v.student||'').toLowerCase().includes(q) ||
+    String(v.no||'').includes(q)
+  );
+  if (currentFilter !== 'all') entries = entries.filter(([,v])=>v.zamanlar?.includes(currentFilter));
+
+  const tbody = document.getElementById('mainTable');
+  document.getElementById('tableCount').textContent = `${entries.length} kayıt`;
+
+  if (!entries.length) {
+    tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><div class="e-icon">🔍</div>Kayıt bulunamadı.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = entries.map(([key,v],i)=>`
+    <tr>
+      <td style="color:var(--muted);font-size:12px;">${String(i+1).padStart(2,'0')}</td>
+      <td>
+        <div class="family-cell">${v.label||key} Ailesi</div>
+        <div class="student-info"><span class="no-badge">No:${v.no||'?'}</span>${v.student||key}</div>
+      </td>
+      <td><span class="count-badge yet">👨‍👩‍👧 ${v.yetiskin}</span></td>
+      <td><span class="count-badge coc">👧 ${v.cocuk}</span></td>
+      <td style="font-weight:700;color:var(--navy);">${(v.yetiskin||0)+(v.cocuk||0)}</td>
+      <td>${timeTags(v.zamanlar)}</td>
+      <td class="not-cell" title="${v.not||''}">${v.not||'—'}</td>
+      <td class="date-cell">${v.tarih||'—'}</td>
+      <td><button class="del-btn" onclick="deleteEntry('${key}')">🗑️</button></td>
+    </tr>`).join('');
+}
+
+function renderPending() {
+  const data = getData();
+  const pending = ogrenciler.filter(o => !data[o.key]);
+  const el = document.getElementById('pendingList');
+  if (!pending.length) {
+    el.innerHTML = '<p style="color:var(--green);font-weight:700;font-size:15px;">🎉 Tüm aileler yanıt verdi!</p>';
+    return;
+  }
+  el.innerHTML = pending.map(o=>`
+    <div class="pending-chip">
+      <div class="p-name"><span class="p-dot"></span>${o.label} Ailesi</div>
+      <div class="p-student"><span class="no-badge">No:${o.no}</span>${o.student}</div>
+    </div>`).join('');
+}
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable();
+}
+
+function filterByTime(t, el) {
+  currentFilter = t || 'all';
+  switchView('table', document.getElementById('nav-table'));
+  document.querySelectorAll('.f-btn').forEach(b=>{
+    const txt = b.textContent.trim();
+    b.classList.toggle('active',
+      (!t && txt==='Tümü') ||
+      (t==='sabah' && txt.includes('Sabah')) ||
+      (t==='ogle'  && txt.includes('Öğle')) ||
+      (t==='aksam' && txt.includes('Akşam'))
+    );
+  });
+  renderTable();
+}
+
+function switchView(name, navEl) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById(`view-${name}`).classList.add('active');
+  if (navEl) navEl.classList.add('active');
+}
+
+function deleteEntry(key) {
+  const o = ogrenciler.find(x=>x.key===key);
+  const name = o ? `${o.label} Ailesi (${o.student})` : key;
+  if (!confirm(`"${name}" kaydını silmek istiyor musunuz?`)) return;
+  const data = getData();
+  delete data[key];
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  render();
+}
+
+function clearAll() {
+  if (!confirm('Tüm veriler kalıcı olarak silinecek. Emin misiniz?')) return;
+  if (!confirm('Son onay: Bu işlem geri alınamaz!')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  render();
+}
+
+function exportCSV() {
+  const data = getData();
+  const rows = [['Sıra','Öğrenci No','Öğrenci Adı','Aile Soyadı','Yetişkin','Çocuk','Toplam','Sabah','Öğle','Akşam','Not','Kayıt Tarihi']];
+  Object.entries(data).forEach(([key,v],i) => {
+    rows.push([
+      i+1, v.no||'', v.student||key, (v.label||key)+' Ailesi',
+      v.yetiskin, v.cocuk, (v.yetiskin||0)+(v.cocuk||0),
+      v.zamanlar?.includes('sabah')?'✓':'',
+      v.zamanlar?.includes('ogle') ?'✓':'',
+      v.zamanlar?.includes('aksam')?'✓':'',
+      v.not||'', v.tarih||''
+    ]);
+  });
+  const csv = rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
+  const blob = new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '5D_Piknik_Admin_Rapor.csv';
+  a.click();
+}
+
+render();
+setInterval(render, 8000);
+</script>
+</body>
+</html>
