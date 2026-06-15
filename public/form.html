@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>5-D Piknik Katılım Formu</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green:    #2d6a4f;
+      --green-lt: #52b788;
+      --green-bg: #d8f3dc;
+      --cream:    #f8f9f4;
+      --card:     #ffffff;
+      --border:   #d4e6da;
+      --text:     #1b2e22;
+      --muted:    #6b8c72;
+      --shadow:   0 2px 16px rgba(45,106,79,.10);
+      --radius:   14px;
+    }
+    body { background: var(--cream); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; padding: 0 0 60px; }
+
+    .hero { background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 60%, #40916c 100%); color: white; text-align: center; padding: 42px 20px 36px; position: relative; overflow: hidden; }
+    .hero::before { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='28'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat; pointer-events: none; }
+    .hero-emoji { font-size: 48px; margin-bottom: 12px; display: block; }
+    .hero h1 { font-size: 22px; font-weight: 700; letter-spacing: -.3px; margin-bottom: 4px; }
+    .hero h2 { font-size: 15px; font-weight: 400; opacity: .80; margin-bottom: 18px; }
+    .chips { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+    .chip { background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.25); border-radius: 20px; padding: 5px 14px; font-size: 13px; font-weight: 500; }
+
+    .wrap { max-width: 680px; margin: 0 auto; padding: 28px 16px 0; }
+
+    /* Search */
+    .search-box { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 18px; box-shadow: var(--shadow); }
+    .search-box label { display: block; font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 10px; }
+    .search-row { display: flex; gap: 10px; }
+    #searchInput { flex: 1; padding: 11px 16px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 15px; color: var(--text); outline: none; transition: border-color .2s; background: var(--cream); }
+    #searchInput:focus { border-color: var(--green-lt); background: white; }
+    .btn-search { padding: 11px 20px; background: var(--green); color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    #dropdown { margin-top: 8px; border: 1.5px solid var(--border); border-radius: 10px; overflow: hidden; display: none; background: white; max-height: 280px; overflow-y: auto; }
+    .drop-item { padding: 11px 16px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #eef3ef; transition: background .1s; }
+    .drop-item:last-child { border-bottom: none; }
+    .drop-item:hover { background: var(--green-bg); color: var(--green); font-weight: 600; }
+    .drop-item .student-name { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    /* Form Card */
+    #formCard { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; display: none; }
+    .card-header { background: linear-gradient(90deg, #2d6a4f, #40916c); color: white; padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; }
+    .card-header .family-name { font-size: 20px; font-weight: 700; }
+    .card-header .family-sub { font-size: 13px; opacity: .80; margin-top: 2px; }
+    .change-btn { background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.30); color: white; border-radius: 8px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .change-btn:hover { background: rgba(255,255,255,.30); }
+    .card-body { padding: 24px; }
+    .field-group { margin-bottom: 24px; }
+    .field-label { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 12px; display: block; }
+
+    /* Steppers */
+    .stepper-row { display: flex; gap: 24px; flex-wrap: wrap; }
+    .stepper { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 120px; }
+    .stepper-label { font-size: 13px; font-weight: 600; color: var(--text); }
+    .stepper-control { display: flex; align-items: center; border: 1.5px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--cream); }
+    .st-btn { width: 40px; height: 40px; border: none; background: transparent; font-size: 20px; font-weight: 700; cursor: pointer; color: var(--green); display: flex; align-items: center; justify-content: center; }
+    .st-btn:hover { background: var(--green-bg); }
+    .st-input { flex: 1; text-align: center; font-size: 18px; font-weight: 700; color: var(--text); border: none; background: transparent; outline: none; min-width: 0; }
+
+    /* Time Cards */
+    .time-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .time-card { border: 2px solid var(--border); border-radius: 12px; padding: 14px 10px; text-align: center; cursor: pointer; transition: all .15s; background: var(--cream); user-select: none; }
+    .time-card:hover { border-color: var(--green-lt); background: white; }
+    .time-card.selected { border-color: var(--green); background: var(--green-bg); }
+    .time-card.selected .t-name { color: var(--green); }
+    .t-icon { font-size: 28px; display: block; margin-bottom: 6px; }
+    .t-name { font-size: 14px; font-weight: 700; color: var(--text); }
+    .t-desc { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+    /* Note */
+    #noteArea { width: 100%; border: 1.5px solid var(--border); border-radius: 10px; padding: 12px; font-size: 14px; font-family: inherit; color: var(--text); resize: vertical; min-height: 80px; background: var(--cream); outline: none; transition: border-color .2s; }
+    #noteArea:focus { border-color: var(--green-lt); background: white; }
+
+    /* Submit */
+    .card-footer { padding: 0 24px 24px; }
+    .btn-submit { width: 100%; padding: 15px; background: var(--green); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; transition: background .15s, transform .1s; position: relative; }
+    .btn-submit:hover:not(:disabled) { background: #1b4332; transform: translateY(-1px); }
+    .btn-submit:disabled { opacity: .7; cursor: not-allowed; }
+
+    /* Already */
+    #alreadyCard { background: #fff8e1; border: 1.5px solid #ffe082; border-radius: var(--radius); padding: 30px 24px; text-align: center; display: none; }
+    .already-icon { font-size: 48px; margin-bottom: 12px; }
+    .already-title { font-size: 18px; font-weight: 700; color: #7b5e04; margin-bottom: 6px; }
+    .already-sub { font-size: 14px; color: #96740a; margin-bottom: 20px; }
+    .btn-edit { background: #f9a825; border: none; color: white; padding: 10px 24px; border-radius: 9px; font-size: 14px; font-weight: 700; cursor: pointer; margin: 4px; }
+    .btn-cancel { background: transparent; border: 1.5px solid #f9a825; color: #7b5e04; padding: 10px 24px; border-radius: 9px; font-size: 14px; font-weight: 700; cursor: pointer; margin: 4px; }
+
+    /* Success */
+    #successCard { background: var(--card); border: 1.5px solid #b7e4c7; border-radius: var(--radius); box-shadow: var(--shadow); padding: 40px 24px; text-align: center; display: none; }
+    .success-icon { font-size: 64px; margin-bottom: 16px; }
+    .success-title { font-size: 22px; font-weight: 700; color: var(--green); margin-bottom: 8px; }
+    .success-sub { font-size: 15px; color: var(--muted); margin-bottom: 24px; }
+    .summary-pill { display: inline-flex; align-items: center; gap: 6px; background: var(--green-bg); border: 1px solid #b7e4c7; border-radius: 20px; padding: 7px 16px; font-size: 13px; font-weight: 600; color: var(--green); margin: 4px; }
+    .btn-again { margin-top: 24px; padding: 12px 28px; border: 2px solid var(--green); background: transparent; color: var(--green); border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .btn-again:hover { background: var(--green); color: white; }
+
+    /* Loading overlay */
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.4); border-top-color: white; border-radius: 50%; animation: spin .7s linear infinite; margin-right: 8px; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Error toast */
+    #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #c62828; color: white; padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 600; display: none; z-index: 999; box-shadow: 0 4px 16px rgba(0,0,0,.2); }
+
+    @media (max-width: 480px) { .time-grid { grid-template-columns: 1fr; } .stepper-row { gap: 14px; } }
+  </style>
+</head>
+<body>
+
+<div class="hero">
+  <span class="hero-emoji">🌿</span>
+  <h1>5-D Sınıfı Piknik Katılım Formu</h1>
+  <h2>Beytepe Ortaokulu • 20 Haziran 2025</h2>
+  <div class="chips">
+    <span class="chip">📅 20 Haziran 2025</span>
+    <span class="chip">🍽️ Yemekli Toplantı</span>
+    <span class="chip">🌳 Piknik</span>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- Arama -->
+  <div class="search-box" id="searchBox">
+    <label>Öğrenci soyadını seçin</label>
+    <div class="search-row">
+      <input type="text" id="searchInput" placeholder="Soyadınızı yazın..." autocomplete="off"
+        oninput="filterDropdown()" onfocus="filterDropdown()">
+      <button class="btn-search" onclick="filterDropdown()">Ara</button>
+    </div>
+    <div id="dropdown"></div>
+  </div>
+
+  <!-- Form -->
+  <div id="formCard">
+    <div class="card-header">
+      <div>
+        <div class="family-name" id="headerName">—</div>
+        <div class="family-sub" id="headerSub"></div>
+      </div>
+      <button class="change-btn" onclick="resetForm()">Değiştir</button>
+    </div>
+    <div class="card-body">
+      <div class="field-group">
+        <span class="field-label">Katılımcı Sayısı</span>
+        <div class="stepper-row">
+          <div class="stepper">
+            <span class="stepper-label">👨‍👩‍👧 Yetişkin</span>
+            <div class="stepper-control">
+              <button class="st-btn" onclick="changeNum('yet',-1)">−</button>
+              <input class="st-input" id="yet" type="number" value="0" min="0" max="20" readonly>
+              <button class="st-btn" onclick="changeNum('yet',1)">+</button>
+            </div>
+          </div>
+          <div class="stepper">
+            <span class="stepper-label">👧 Çocuk</span>
+            <div class="stepper-control">
+              <button class="st-btn" onclick="changeNum('coc',-1)">−</button>
+              <input class="st-input" id="coc" type="number" value="0" min="0" max="20" readonly>
+              <button class="st-btn" onclick="changeNum('coc',1)">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="field-group">
+        <span class="field-label">Ne Zaman Katılacaksınız? (Birden fazla seçebilirsiniz)</span>
+        <div class="time-grid">
+          <div class="time-card" id="tc-sabah" onclick="toggleTime('sabah')">
+            <span class="t-icon">☀️</span>
+            <span class="t-name">Sabah</span>
+            <span class="t-desc">08:00 – 12:00</span>
+          </div>
+          <div class="time-card" id="tc-ogle" onclick="toggleTime('ogle')">
+            <span class="t-icon">🌤️</span>
+            <span class="t-name">Öğle</span>
+            <span class="t-desc">12:00 – 16:00</span>
+          </div>
+          <div class="time-card" id="tc-aksam" onclick="toggleTime('aksam')">
+            <span class="t-icon">🌇</span>
+            <span class="t-name">Akşam</span>
+            <span class="t-desc">16:00 – 20:00</span>
+          </div>
+        </div>
+      </div>
+      <div class="field-group" style="margin-bottom:0;">
+        <span class="field-label">Notunuz (opsiyonel)</span>
+        <textarea id="noteArea" placeholder="Özel bir durumunuz varsa buraya yazabilirsiniz..."></textarea>
+      </div>
+    </div>
+    <div class="card-footer">
+      <button class="btn-submit" id="submitBtn" onclick="submitForm()">✅ Katılımımı Kaydet</button>
+    </div>
+  </div>
+
+  <!-- Zaten kayıtlı -->
+  <div id="alreadyCard">
+    <div class="already-icon">📋</div>
+    <div class="already-title" id="alreadyName"></div>
+    <div class="already-sub">Bu öğrenci için zaten bir kayıt mevcut. Ne yapmak istersiniz?</div>
+    <button class="btn-edit" onclick="editExisting()">✏️ Kaydı Düzenle</button>
+    <button class="btn-cancel" onclick="resetForm()">← Geri Dön</button>
+  </div>
+
+  <!-- Başarı -->
+  <div id="successCard">
+    <div class="success-icon">🎉</div>
+    <div class="success-title">Katılımınız Kaydedildi!</div>
+    <div class="success-sub">Teşekkürler, piknikte görüşürüz! 🌿</div>
+    <div id="successPills"></div>
+    <button class="btn-again" onclick="resetForm()">Başka Öğrenci İçin Kaydet</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const ogrenciler = [
+  { key:"Altun",       label:"Altun",       student:"Demir Altun",            no:113 },
+  { key:"Alpman",      label:"Alpman",      student:"Muhammed Ziya Alpman",   no:118 },
+  { key:"Bahar",       label:"Bahar",       student:"Eymen Bahar",            no:122 },
+  { key:"Bayraktutan", label:"Bayraktutan", student:"Nur Alanur Bayraktutan", no:143 },
+  { key:"Akgül",       label:"Akgül",       student:"Ata Akgül",              no:148 },
+  { key:"Birbilen",    label:"Birbilen",    student:"Mehmet Çınar Birbilen",  no:152 },
+  { key:"Özsümbül",    label:"Özsümbül",    student:"Baha Özsümbül",          no:161 },
+  { key:"Gökmen",      label:"Gökmen",      student:"Deniz Gökmen",           no:192 },
+  { key:"Başak",       label:"Başak",       student:"Erva Ada Başak",         no:229 },
+  { key:"Meral",       label:"Meral",       student:"Cansu Meral",            no:243 },
+  { key:"Kula",        label:"Kula",        student:"Defne Kula",             no:272 },
+  { key:"Dikmen",      label:"Dikmen",      student:"Fatih Hamza Dikmen",     no:325 },
+  { key:"Koçakoğlu",  label:"Koçakoğlu",   student:"Yiğit Arslan Koçakoğlu",no:399 },
+  { key:"Köroğlu",    label:"Köroğlu",      student:"Aslı Köroğlu",           no:408 },
+  { key:"Günaydın",   label:"Günaydın",     student:"Burçak Günaydın",        no:475 },
+  { key:"Tunç",        label:"Tunç",        student:"Ufuk Çelik Tunç",        no:502 },
+  { key:"Doğrusoy",   label:"Doğrusoy",     student:"Yusuf Erol Doğrusoy",    no:511 },
+  { key:"Kumcu",       label:"Kumcu",       student:"Metehan Emir Kumcu",     no:526 },
+  { key:"Karaçöl",    label:"Karaçöl",      student:"M. Ali Karaçöl",         no:536 },
+  { key:"Barsbay",     label:"Barsbay",     student:"Yiğit Barsbay",          no:559 },
+  { key:"Büyükköprü", label:"Büyükköprü",  student:"M. Taha Büyükköprü",     no:563 },
+  { key:"Yılmaz_671", label:"Yılmaz",      student:"Zafer Yılmaz",            no:671 },
+  { key:"Çoruh",       label:"Çoruh",       student:"Derin Çoruh",            no:722 },
+  { key:"Yıldırım",   label:"Yıldırım",     student:"Duru Yıldırım",          no:865 },
+  { key:"Öztürk_878", label:"Öztürk",      student:"Defne Rena Öztürk",      no:878 },
+  { key:"Demirkısan", label:"Demirkısan",   student:"Elif Demirkısan",        no:917 },
+  { key:"Yılmaz_931", label:"Yılmaz",      student:"Elif Aybige Yılmaz",     no:931 },
+  { key:"Esen",        label:"Esen",        student:"Ece Esen",               no:942 },
+  { key:"Öztürk_951", label:"Öztürk",      student:"Lara Öztürk",            no:951 },
+  { key:"Öztürk_952", label:"Öztürk",      student:"Mira Öztürk",            no:952 },
+  { key:"Coşkun",      label:"Coşkun",      student:"Asrın Coşkun",           no:973 },
+  { key:"Yerlikaya",  label:"Yerlikaya",    student:"Erva Yerlikaya",         no:977 },
+  { key:"Cebe",        label:"Cebe",        student:"Filiz Beyza Cebe",       no:980 },
+  { key:"Çırak",       label:"Çırak",       student:"Karen Çırak",            no:986 },
+  { key:"Çelik",       label:"Çelik",       student:"Öykü Çelik",             no:992 },
+  { key:"Deniz",       label:"Deniz",       student:"Hira Nur Deniz",         no:993 },
+  { key:"Elverir",    label:"Elverir",      student:"Ela Elverir",            no:1001 },
+  { key:"Özcan",       label:"Özcan",       student:"M. Zahid Özcan",         no:1009 },
+];
+
+let selectedEntry = null;
+let editingExisting = false;
+
+// ── API ────────────────────────────────────────────────────
+async function apiGet(key) {
+  const r = await fetch(`/api/kayitlar/${encodeURIComponent(key)}`);
+  if (r.status === 404) return null;
+  if (!r.ok) throw new Error('Sunucu hatası');
+  return r.json();
+}
+
+async function apiSave(key, payload) {
+  const r = await fetch(`/api/kayitlar/${encodeURIComponent(key)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!r.ok) throw new Error('Kayıt sırasında hata oluştu');
+  return r.json();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3500);
+}
+
+// ── UI ────────────────────────────────────────────────────
+function filterDropdown() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const dd = document.getElementById('dropdown');
+  if (!q) { dd.style.display = 'none'; return; }
+  const matches = ogrenciler.filter(o =>
+    o.label.toLowerCase().includes(q) || o.student.toLowerCase().includes(q)
+  );
+  if (!matches.length) { dd.style.display = 'none'; return; }
+  dd.innerHTML = matches.map(o => `
+    <div class="drop-item" onclick="selectEntry('${o.key}')">
+      <strong>${o.label} Ailesi</strong>
+      <div class="student-name">No: ${o.no} — ${o.student}</div>
+    </div>`).join('');
+  dd.style.display = 'block';
+}
+
+async function selectEntry(key) {
+  selectedEntry = ogrenciler.find(o => o.key === key);
+  document.getElementById('searchInput').value = selectedEntry.label;
+  document.getElementById('dropdown').style.display = 'none';
+
+  let existing = null;
+  try { existing = await apiGet(key); } catch { showToast('⚠️ Sunucuya bağlanılamadı'); return; }
+
+  if (existing && !editingExisting) {
+    hide('searchBox'); hide('formCard'); hide('successCard');
+    document.getElementById('alreadyName').textContent =
+      `${selectedEntry.label} Ailesi — ${selectedEntry.student} — Kayıt Zaten Mevcut`;
+    show('alreadyCard');
+  } else {
+    showForm(existing);
+  }
+  editingExisting = false;
+}
+
+function showForm(existing) {
+  hide('searchBox'); hide('alreadyCard'); hide('successCard');
+  document.getElementById('headerName').textContent = selectedEntry.label + ' Ailesi';
+  document.getElementById('headerSub').textContent = `No: ${selectedEntry.no} • ${selectedEntry.student}`;
+  document.getElementById('yet').value = existing?.yetiskin ?? 0;
+  document.getElementById('coc').value = existing?.cocuk ?? 0;
+  document.getElementById('noteArea').value = existing?.not ?? '';
+  ['sabah','ogle','aksam'].forEach(z =>
+    document.getElementById(`tc-${z}`).classList.toggle('selected', !!(existing?.zamanlar?.includes(z)))
+  );
+  show('formCard');
+}
+
+async function editExisting() {
+  editingExisting = true;
+  await selectEntry(selectedEntry.key);
+}
+
+function resetForm() {
+  selectedEntry = null;
+  document.getElementById('searchInput').value = '';
+  hide('formCard'); hide('successCard'); hide('alreadyCard');
+  show('searchBox');
+}
+
+function changeNum(id, delta) {
+  const el = document.getElementById(id);
+  el.value = Math.max(0, parseInt(el.value || 0) + delta);
+}
+
+function toggleTime(z) {
+  document.getElementById(`tc-${z}`).classList.toggle('selected');
+}
+
+async function submitForm() {
+  const yet = parseInt(document.getElementById('yet').value) || 0;
+  const coc = parseInt(document.getElementById('coc').value) || 0;
+  if (yet + coc === 0) { showToast('⚠️ Lütfen en az 1 katılımcı sayısı girin.'); return; }
+  const zamanlar = ['sabah','ogle','aksam'].filter(z =>
+    document.getElementById(`tc-${z}`).classList.contains('selected')
+  );
+  if (!zamanlar.length) { showToast('⚠️ Lütfen en az bir zaman dilimi seçin.'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Kaydediliyor...';
+
+  try {
+    await apiSave(selectedEntry.key, {
+      label: selectedEntry.label,
+      student: selectedEntry.student,
+      no: selectedEntry.no,
+      yetiskin: yet, cocuk: coc, zamanlar,
+      not: document.getElementById('noteArea').value.trim()
+    });
+  } catch (e) {
+    showToast('❌ ' + e.message);
+    btn.disabled = false;
+    btn.innerHTML = '✅ Katılımımı Kaydet';
+    return;
+  }
+
+  hide('formCard');
+  show('successCard');
+  const zLabels = { sabah:'☀️ Sabah', ogle:'🌤️ Öğle', aksam:'🌇 Akşam' };
+  document.getElementById('successPills').innerHTML = [
+    `<span class="summary-pill">👨‍👩‍👧 ${yet} Yetişkin</span>`,
+    `<span class="summary-pill">👧 ${coc} Çocuk</span>`,
+    ...zamanlar.map(z => `<span class="summary-pill">${zLabels[z]}</span>`)
+  ].join('');
+
+  btn.disabled = false;
+  btn.innerHTML = '✅ Katılımımı Kaydet';
+}
+
+function show(id) { document.getElementById(id).style.display = 'block'; }
+function hide(id) { document.getElementById(id).style.display = 'none'; }
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-box')) document.getElementById('dropdown').style.display = 'none';
+});
+</script>
+</body>
+</html>
