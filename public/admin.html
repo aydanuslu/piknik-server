@@ -168,6 +168,10 @@
     <div class="sidebar-section">İşlemler</div>
     <div class="nav-item" onclick="loadData()"><span class="icon">🔄</span> Yenile</div>
     <div class="nav-item" onclick="window.open('/form.html','_blank')"><span class="icon">📝</span> Formu Aç</div>
+    <div class="nav-item" onclick="window.open('/kura.html','_blank')"><span class="icon">👁️</span> Kura Sayfası</div>
+
+    <div class="sidebar-section">Bahar Şenliği</div>
+    <div class="nav-item" id="nav-kura" onclick="switchView('kura',this)"><span class="icon">🌸</span> Kura Çekimi</div>
   </div>
 
   <div class="main">
@@ -215,6 +219,31 @@
           <thead><tr><th>#</th><th>Aile / Öğrenci</th><th>Yetişkin</th><th>Çocuk</th><th>Toplam</th><th>Zamanlar</th><th>Not</th><th>Kayıt Tarihi</th><th>İşlem</th></tr></thead>
           <tbody id="mainTable"></tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- KURA -->
+    <div id="view-kura" class="view">
+      <div class="panel" style="max-width:600px;margin:0 auto;">
+        <div class="panel-title">🌸 Bahar Şenliği Kura Çekimi</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:20px;">38 öğrenci arasından rastgele 2 öğrenci seçilir. Sonuç tüm velilere aynı anda görünür.</p>
+
+        <!-- Mevcut kura -->
+        <div id="kuraStatus" style="margin-bottom:20px;"></div>
+
+        <!-- Kura çekme kutusu -->
+        <div id="kuraBox" style="background:var(--bg);border-radius:14px;padding:24px;text-align:center;">
+          <div id="kuraDrum" style="display:none;font-size:48px;margin-bottom:12px;">🎲</div>
+          <div id="kuraTicker" style="display:none;font-size:15px;font-weight:700;color:var(--navy);margin-bottom:8px;min-height:24px;"></div>
+          <div id="kuraWinners" style="margin-bottom:16px;"></div>
+          <button id="btnKuraCek" onclick="kuraCek()" style="padding:14px 36px;border:none;border-radius:12px;background:linear-gradient(135deg,#2d6a4f,#52b788);color:white;font-size:16px;font-weight:700;cursor:pointer;">🎰 Kura Çek</button>
+          <button id="btnKuraSifirla" onclick="kuraSifirla()" style="display:none;margin-left:10px;padding:14px 24px;border:2px solid #ef9a9a;border-radius:12px;background:#ffebee;color:#c62828;font-size:14px;font-weight:700;cursor:pointer;">🗑️ Sıfırla</button>
+        </div>
+
+        <div style="margin-top:16px;padding:14px;background:#e8eaf6;border-radius:10px;font-size:13px;color:var(--navy);">
+          💡 Kura çekildikten sonra veliler <strong>kura.html</strong> sayfasında sonucu görebilir.
+          <br><a href="/kura.html" target="_blank" style="color:var(--blue);font-weight:700;margin-top:6px;display:inline-block;">→ Kura sonuç sayfasını aç</a>
+        </div>
       </div>
     </div>
 
@@ -442,6 +471,99 @@ function exportCSV() {
   a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}));
   a.download='5D_Piknik_Admin.csv';
   a.click();
+}
+
+
+// ── KURA ────────────────────────────────────────────────────
+const kuraOgrenciler = [
+  { ad:"Demir Altun", no:113 }, { ad:"Muhammed Ziya Alpman", no:118 },
+  { ad:"Eymen Bahar", no:122 }, { ad:"Nur Alanur Bayraktutan", no:143 },
+  { ad:"Ata Akgül", no:148 }, { ad:"Mehmet Çınar Birbilen", no:152 },
+  { ad:"Baha Özsümbül", no:161 }, { ad:"Deniz Gökmen", no:192 },
+  { ad:"Erva Ada Başak", no:229 }, { ad:"Cansu Meral", no:243 },
+  { ad:"Defne Kula", no:272 }, { ad:"Fatih Hamza Dikmen", no:325 },
+  { ad:"Yiğit Arslan Koçakoğlu", no:399 }, { ad:"Aslı Köroğlu", no:408 },
+  { ad:"Burçak Günaydın", no:475 }, { ad:"Ufuk Çelik Tunç", no:502 },
+  { ad:"Yusuf Erol Doğrusoy", no:511 }, { ad:"Metehan Emir Kumcu", no:526 },
+  { ad:"M. Ali Karaçöl", no:536 }, { ad:"Yiğit Barsbay", no:559 },
+  { ad:"M. Taha Büyükköprü", no:563 }, { ad:"Zafer Yılmaz", no:671 },
+  { ad:"Derin Çoruh", no:722 }, { ad:"Duru Yıldırım", no:865 },
+  { ad:"Defne Rena Öztürk", no:878 }, { ad:"Elif Demirkısan", no:917 },
+  { ad:"Elif Aybige Yılmaz", no:931 }, { ad:"Ece Esen", no:942 },
+  { ad:"Lara Öztürk", no:951 }, { ad:"Mira Öztürk", no:952 },
+  { ad:"Asrın Coşkun", no:973 }, { ad:"Erva Yerlikaya", no:977 },
+  { ad:"Filiz Beyza Cebe", no:980 }, { ad:"Karen Çırak", no:986 },
+  { ad:"Öykü Çelik", no:992 }, { ad:"Hira Nur Deniz", no:993 },
+  { ad:"Ela Elverir", no:1001 }, { ad:"M. Zahid Özcan", no:1009 }
+];
+
+async function loadKuraStatus() {
+  try {
+    const r = await fetch('/api/kura');
+    const statusEl = document.getElementById('kuraStatus');
+    if (!statusEl) return;
+    if (r.status === 404) {
+      statusEl.innerHTML = '<div style="background:#fff8e1;border:1.5px solid #ffe082;border-radius:10px;padding:14px;text-align:center;font-size:13px;color:#7b5e04;">⏳ Henüz kura çekilmedi.</div>';
+      document.getElementById('btnKuraSifirla').style.display = 'none';
+      document.getElementById('btnKuraCek').style.display = 'inline-block';
+      document.getElementById('btnKuraCek').disabled = false;
+      return;
+    }
+    const kura = await r.json();
+    statusEl.innerHTML = `<div style="background:#e8f5e9;border:1.5px solid #a5d6a7;border-radius:10px;padding:14px;">
+      <div style="font-weight:700;color:#2e7d32;margin-bottom:10px;">✅ Kura çekildi — ${kura.tarih}</div>
+      ${kura.secilen.map((p,i)=>`<div style="display:flex;align-items:center;gap:10px;background:white;border-radius:8px;padding:10px 12px;margin-bottom:8px;">
+        <div style="width:28px;height:28px;border-radius:50%;background:#2d6a4f;color:white;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;">${i+1}</div>
+        <div><div style="font-weight:700;font-size:14px;">${p.ad}</div><div style="font-size:11px;color:#666;">No: ${p.no}</div></div>
+        <span style="margin-left:auto;background:#d8f3dc;color:#2d6a4f;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;">🎪 Stant</span>
+      </div>`).join('')}
+    </div>`;
+    document.getElementById('btnKuraCek').style.display = 'none';
+    document.getElementById('btnKuraSifirla').style.display = 'inline-block';
+  } catch(e) { console.log(e); }
+}
+
+async function kuraCek() {
+  const btn = document.getElementById('btnKuraCek');
+  const drum = document.getElementById('kuraDrum');
+  const ticker = document.getElementById('kuraTicker');
+  btn.disabled = true;
+  drum.style.display = 'block';
+  ticker.style.display = 'block';
+
+  const pool = [...kuraOgrenciler].sort(() => Math.random() - 0.5);
+  const picked = pool.slice(0, 2);
+
+  const interval = setInterval(() => {
+    const r = kuraOgrenciler[Math.floor(Math.random() * kuraOgrenciler.length)];
+    ticker.textContent = r.ad;
+  }, 80);
+
+  setTimeout(async () => {
+    clearInterval(interval);
+    drum.style.display = 'none';
+    ticker.style.display = 'none';
+    await fetch('/api/kura', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secilen: picked })
+    });
+    loadKuraStatus();
+  }, 3000);
+}
+
+async function kuraSifirla() {
+  if (!confirm('Kura sonucu silinecek. Emin misiniz?')) return;
+  await fetch('/api/kura', { method: 'DELETE' });
+  document.getElementById('kuraStatus').innerHTML = '';
+  loadKuraStatus();
+}
+
+// switchView override to load kura on nav
+const _origSwitch = switchView;
+function switchView(name, el) {
+  _origSwitch(name, el);
+  if (name === 'kura') loadKuraStatus();
 }
 
 // İlk yükleme + her 10 saniyede otomatik yenile
